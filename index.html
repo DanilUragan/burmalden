@@ -1,0 +1,734 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Квадрат</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;700&family=Onest:wght@400;500;600&display=swap">
+<style>
+/* Layout: поисковая панель с чертёжной сеткой и планом квартиры сверху, ниже каталог карточек; один акцент (синий кальки). */
+:root{
+  --bg:#F2F4F5; --surface:#FFFFFF; --ink:#14232B; --muted:#56676F; --line:#D3DCE0;
+  --accent:#2347C5; --accent-ink:#FFFFFF; --grid:rgba(35,71,197,.08); --sky:#E1E9EF;
+  --danger:#B3261E; --ok:#1B7F4B; --win:#F3D78A; --win-off:rgba(255,255,255,.3);
+  --font-display:'Geologica',system-ui,sans-serif; --font-body:'Onest',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E151B; --surface:#151F27; --ink:#E7EDF0; --muted:#9AABB4; --line:#273540;
+    --accent:#86A2FF; --accent-ink:#0B1230; --grid:rgba(134,162,255,.09); --sky:#1B2833;
+    --danger:#FF8A80; --ok:#6FD3A0; --win:#E9C970; --win-off:rgba(255,255,255,.14);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E151B; --surface:#151F27; --ink:#E7EDF0; --muted:#9AABB4; --line:#273540;
+  --accent:#86A2FF; --accent-ink:#0B1230; --grid:rgba(134,162,255,.09); --sky:#1B2833;
+  --danger:#FF8A80; --ok:#6FD3A0; --win:#E9C970; --win-off:rgba(255,255,255,.14);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink); font:400 16px/1.5 var(--font-body);
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:0 32px;
+}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;line-height:1.15}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:1.25rem;letter-spacing:-.01em}
+.logo svg{width:28px;height:28px;color:var(--accent)}
+.auth-area{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:8px;font-weight:500;line-height:1.2}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:transparent}
+.btn.small{padding:6px 12px;font-size:.9rem}
+.badge{display:inline-block;min-width:1.4em;padding:0 6px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:.8rem;text-align:center;margin-left:6px}
+
+/* hero */
+.hero{
+  background:
+    linear-gradient(var(--grid) 1px,transparent 1px) 0 0/24px 24px,
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/24px 24px,
+    var(--surface);
+  border:1px solid var(--line);border-radius:14px;padding:clamp(20px,4vw,40px);
+}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:700;letter-spacing:-.02em}
+.hero .lead{margin-top:14px;color:var(--muted);max-width:46ch;font-size:1.05rem}
+.plan{width:100%;max-width:420px;justify-self:end;height:auto}
+.plan .w{fill:none;stroke:var(--ink);stroke-width:3;stroke-linecap:square}
+.plan .t{font:500 12px var(--font-body);fill:var(--ink)}
+.plan .a{font:400 11px var(--font-body);fill:var(--muted)}
+.plan .gl{fill:var(--sky);stroke:var(--accent);stroke-width:1.5}
+
+/* filters */
+.filters{margin-top:28px;display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0}
+.seg span{display:block;padding:10px 16px;font-weight:500;cursor:pointer;white-space:nowrap}
+.seg input:checked + span{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:-2px}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fl label,.field label{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.fl select,.fl input,.field input{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0;
+}
+.fl select:hover,.fl input:hover,.field input:hover{border-color:var(--accent)}
+
+/* catalog */
+.cat-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:36px 0 16px;flex-wrap:wrap}
+.cat-head h2{font-size:1.6rem}
+.count{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card:hover{border-color:var(--accent)}
+.card-open{display:block;width:100%;text-align:left;background:none;border:0;padding:0}
+.art{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--sky)}
+.art svg{display:block;width:100%;height:100%}
+.tag{position:absolute;left:10px;bottom:10px;background:var(--surface);color:var(--ink);font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
+.card-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:2px}
+.price{font:700 1.35rem/1.2 var(--font-display);font-variant-numeric:tabular-nums}
+.ppm{color:var(--muted);font-size:.88rem;font-variant-numeric:tabular-nums}
+.params{margin-top:8px;font-weight:500}
+.where{color:var(--muted);font-size:.92rem}
+.heart{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;padding:0}
+.heart svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:2}
+.heart.on svg{fill:var(--accent);stroke:var(--accent)}
+.heart:hover{border-color:var(--accent)}
+.empty{grid-column:1/-1;padding:40px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;display:flex;flex-direction:column;gap:12px;align-items:center}
+
+/* why account */
+.why{margin-top:48px}
+.why h2{font-size:1.6rem;margin-bottom:16px}
+.why ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.why li{border-top:2px solid var(--ink);padding-top:12px}
+.why h3{font-size:1.05rem;margin-bottom:6px}
+.why p{color:var(--muted)}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem;max-width:80ch}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(8,14,18,.6);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto;z-index:20}
+.modal{position:relative;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;width:100%;max-width:640px;margin-block:auto;padding:24px;outline:none}
+.modal.wide{max-width:760px}
+.x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:1.3rem;line-height:1;padding:0}
+.x:hover{border-color:var(--accent)}
+.modal h2{font-size:1.5rem;padding-right:44px}
+.modal h3{font-size:1.05rem;margin:22px 0 8px}
+.note{margin-top:8px;color:var(--muted)}
+.tabs{display:flex;gap:4px;margin:16px 0;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 14px;font-weight:500;color:var(--muted);margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.form{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field input[aria-invalid="true"]{border-color:var(--danger)}
+.err{color:var(--danger);font-size:.88rem;min-height:0}
+.err:empty{display:none}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.92rem}
+.check input{margin-top:4px;width:auto}
+.formerr{color:var(--danger);font-weight:500}
+.formerr:empty{display:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.detail-art{border-radius:10px;overflow:hidden;margin:16px 0}
+.detail-art .art{aspect-ratio:16/8}
+.dprice{font:700 1.8rem/1.2 var(--font-display);font-variant-numeric:tabular-nums}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 20px;margin:14px 0 0}
+dt{color:var(--muted)}
+dd{margin:0;font-weight:500;min-width:0}
+.box{margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:10px}
+.phone{font:700 1.3rem var(--font-display);font-variant-numeric:tabular-nums;user-select:all}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.list li{display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.list .lnk{background:none;border:0;padding:0;text-align:left;font-weight:500;min-width:0}
+.list .lnk:hover{color:var(--accent)}
+.list .meta{color:var(--muted);font-size:.88rem;white-space:nowrap}
+.fine{color:var(--muted);font-size:.85rem}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:500;z-index:30;max-width:calc(100vw - 32px);text-align:center}
+
+@media (max-width:860px){
+  .hero-grid{grid-template-columns:1fr}
+  .plan{justify-self:start;max-width:360px}
+  .filters{grid-template-columns:1fr 1fr}
+  .filters .seg{grid-column:1/-1;justify-self:start}
+}
+@media (max-width:480px){
+  .filters{grid-template-columns:1fr}
+  dl{grid-template-columns:1fr;gap:0}
+  dd{margin-bottom:8px}
+  .modal{padding:20px 16px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .card,.btn,.heart{transition:border-color .15s,filter .15s}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="4" y="8" width="16" height="16"/><path d="M4 3h16M4 1v4M20 1v4"/><path d="M24 8v16M22 8h4M22 24h4"/></svg>
+      <span>Квадрат</span>
+    </div>
+    <div class="auth-area" id="auth-area"></div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="h1">
+      <div class="hero-grid">
+        <div>
+          <h1 id="h1">Найдите свой квадратный метр</h1>
+          <p class="lead">Квартиры и дома в шести городах Казахстана. У каждого объекта указана цена за метр, этаж и год постройки.</p>
+        </div>
+        <svg class="plan" viewBox="0 0 360 290" role="img" aria-label="Схематичный план квартиры: кухня, прихожая, санузел, гостиная и спальня">
+          <rect class="gl" x="150" y="16" width="70" height="8"/>
+          <rect class="gl" x="250" y="16" width="60" height="8"/>
+          <rect class="gl" x="336" y="190" width="8" height="50"/>
+          <rect class="gl" x="16" y="50" width="8" height="40"/>
+          <path class="w" d="M20 20H340V260H20Z"/>
+          <path class="w" d="M140 20V60M140 80V170M140 190V260"/>
+          <path class="w" d="M20 130H140M20 210H140M140 150H340"/>
+          <text class="t" x="34" y="72">Кухня</text><text class="a" x="34" y="88">9,4 м²</text>
+          <text class="t" x="34" y="164">Прихожая</text><text class="a" x="34" y="180">5,2 м²</text>
+          <text class="t" x="34" y="232">Санузел</text><text class="a" x="34" y="248">4,1 м²</text>
+          <text class="t" x="170" y="82">Гостиная</text><text class="a" x="170" y="98">18,2 м²</text>
+          <text class="t" x="170" y="196">Спальня</text><text class="a" x="170" y="212">12,6 м²</text>
+          <text class="a" x="20" y="282">План-пример, масштаб условный</text>
+        </svg>
+      </div>
+
+      <form class="filters" id="filters" aria-label="Фильтры объектов" onsubmit="return false">
+        <div class="seg" role="radiogroup" aria-label="Тип сделки">
+          <label><input type="radio" name="deal" value="sale" checked><span>Купить</span></label>
+          <label><input type="radio" name="deal" value="rent"><span>Снять</span></label>
+        </div>
+        <div class="fl"><label for="f-city">Город</label>
+          <select id="f-city"><option value="">Все города</option></select></div>
+        <div class="fl"><label for="f-rooms">Комнат</label>
+          <select id="f-rooms">
+            <option value="">Любое</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4 и больше</option>
+          </select></div>
+        <div class="fl"><label for="f-price">Цена до, ₸</label>
+          <input id="f-price" type="text" inputmode="numeric" placeholder="например, 40 000 000" autocomplete="off"></div>
+        <div class="fl"><label for="f-sort">Сортировка</label>
+          <select id="f-sort">
+            <option value="def">По умолчанию</option>
+            <option value="price-asc">Сначала дешевле</option>
+            <option value="price-desc">Сначала дороже</option>
+            <option value="area-desc">Больше площадь</option>
+            <option value="ppm-asc">Дешевле за м²</option>
+          </select></div>
+      </form>
+    </section>
+
+    <section aria-labelledby="cat-title">
+      <div class="cat-head">
+        <h2 id="cat-title">Объекты</h2>
+        <p class="count" id="count" aria-live="polite"></p>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section class="why" aria-labelledby="why-title">
+      <h2 id="why-title">Что даёт аккаунт</h2>
+      <ul>
+        <li><h3>Избранное</h3><p>Сохраняйте понравившиеся объекты и возвращайтесь к ним из личного кабинета.</p></li>
+        <li><h3>Телефон владельца</h3><p>Контакт открывается после входа, чтобы объявлениями не пользовались боты.</p></li>
+        <li><h3>Запись на просмотр</h3><p>Выберите дату, и заявка появится в кабинете. Её можно отменить в любой момент.</p></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Квадрат — учебный проект на чистом HTML, CSS и JavaScript. Объекты в каталоге вымышленные, телефоны ненастоящие.
+    Аккаунты хранятся только в этом браузере (localStorage), пароль сохраняется в виде хеша PBKDF2 с солью.
+  </footer>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+    <button class="x" type="button" data-act="close" aria-label="Закрыть">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- данные (примеры) ---------- */
+var LISTINGS=[
+ {id:1,deal:'sale',city:'Астана',district:'Есиль',complex:'ЖК «Северный парк»',type:'Новостройка',rooms:2,area:58,floor:7,floors:16,year:2022,price:41500000,phone:'+7 700 000-00-01',desc:'Светлая двушка с кухней-гостиной и панорамными окнами. Закрытый двор, подземный паркинг, школа в соседнем квартале.'},
+ {id:2,deal:'sale',city:'Алматы',district:'Бостандыкский',complex:'ЖК «Горная терраса»',type:'Новостройка',rooms:3,area:84,floor:11,floors:20,year:2023,price:92000000,phone:'+7 700 000-00-02',desc:'Трёхкомнатная квартира с видом на предгорья. Две ванные комнаты, гардеробная, отделка под ключ.'},
+ {id:3,deal:'sale',city:'Шымкент',district:'Абайский',complex:'ул. Тауке хана',type:'Вторичка',rooms:1,area:38,floor:3,floors:9,year:2009,price:21000000,phone:'+7 700 000-00-03',desc:'Однокомнатная квартира после ремонта, окна во двор. Рядом остановки и рынок.'},
+ {id:4,deal:'sale',city:'Уральск',district:'Центр',complex:'ул. Достык',type:'Вторичка',rooms:3,area:72,floor:4,floors:5,year:1986,price:34000000,phone:'+7 700 000-00-04',desc:'Просторная трёхкомнатная квартира в кирпичном доме. Заменены окна, трубы и проводка.'},
+ {id:5,deal:'sale',city:'Актау',district:'12 микрорайон',complex:'ЖК «Каспий»',type:'Новостройка',rooms:2,area:55,floor:9,floors:12,year:2021,price:29000000,phone:'+7 700 000-00-05',desc:'Двухкомнатная квартира в десяти минутах пешком от набережной. Лоджия застеклена, окна на море.'},
+ {id:6,deal:'sale',city:'Караганда',district:'Юго-Восток',complex:'ул. Гоголя',type:'Вторичка',rooms:1,area:35,floor:2,floors:5,year:1978,price:16000000,phone:'+7 700 000-00-06',desc:'Компактная квартира для первой покупки. Тихий двор, детский сад и поликлиника рядом.'},
+ {id:7,deal:'sale',city:'Уральск',district:'Зачаганск',complex:'Коттеджный посёлок',type:'Дом',rooms:5,area:180,floor:1,floors:2,year:2019,price:78000000,phone:'+7 700 000-00-07',desc:'Дом на участке 8 соток: гараж на две машины, котельная, терраса. Подведены газ и вода.'},
+ {id:8,deal:'rent',city:'Астана',district:'Алматинский',complex:'ЖК «Белая река»',type:'Новостройка',rooms:1,area:40,floor:5,floors:18,year:2021,price:250000,phone:'+7 700 000-00-08',desc:'Квартира с мебелью и техникой. Подойдёт для одного или двоих, от трёх месяцев.'},
+ {id:9,deal:'rent',city:'Алматы',district:'Медеуский',complex:'ул. Фурманова',type:'Вторичка',rooms:2,area:60,floor:6,floors:9,year:2005,price:380000,phone:'+7 700 000-00-09',desc:'Двухкомнатная квартира в центре, пять минут до метро. Кондиционер, стиральная машина, интернет.'},
+ {id:10,deal:'rent',city:'Уральск',district:'Центр',complex:'ул. Ихсанова',type:'Вторичка',rooms:2,area:52,floor:3,floors:5,year:1990,price:170000,phone:'+7 700 000-00-10',desc:'Уютная двушка с ремонтом. Можно с детьми, животных обсуждаем отдельно.'},
+ {id:11,deal:'rent',city:'Шымкент',district:'Аль-Фарабийский',complex:'ЖК «Тассай»',type:'Новостройка',rooms:2,area:55,floor:8,floors:14,year:2020,price:160000,phone:'+7 700 000-00-11',desc:'Квартира в новом доме с охраняемой территорией и детской площадкой. Коммунальные платежи отдельно.'},
+ {id:12,deal:'rent',city:'Актау',district:'8 микрорайон',complex:'ул. Мангистау',type:'Вторичка',rooms:1,area:36,floor:4,floors:5,year:1988,price:200000,phone:'+7 700 000-00-12',desc:'Однокомнатная квартира рядом с морем. Кондиционер, свежий ремонт, мебель остаётся.'},
+ {id:13,deal:'rent',city:'Караганда',district:'Майкудук',complex:'ул. Мустафина',type:'Вторичка',rooms:2,area:50,floor:5,floors:9,year:1995,price:150000,phone:'+7 700 000-00-13',desc:'Двухкомнатная квартира на длительный срок. Рядом школа, магазины, остановка автобуса.'},
+ {id:14,deal:'sale',city:'Астана',district:'Сарыарка',complex:'ЖК «Тумар»',type:'Новостройка',rooms:4,area:112,floor:14,floors:22,year:2024,price:96000000,phone:'+7 700 000-00-14',desc:'Четырёхкомнатная квартира с двумя санузлами и отдельной кладовой. Дом сдан, ключи сразу.'}
+];
+
+/* ---------- утилиты ---------- */
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var fmt=function(n){return Number(n).toLocaleString('ru-RU');};
+var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var byId=function(id){for(var i=0;i<LISTINGS.length;i++){if(LISTINGS[i].id===id)return LISTINGS[i];}return null;};
+
+var mem={};
+var store={
+  get:function(k,d){
+    if(k in mem)return mem[k];
+    try{var v=localStorage.getItem(k);if(v!==null){mem[k]=JSON.parse(v);return mem[k];}}catch(e){}
+    return d;
+  },
+  set:function(k,v){
+    mem[k]=v;
+    try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+  }
+};
+
+function titleOf(l){return (l.type==='Дом'?'Дом':l.rooms+'-комн. квартира')+', '+l.area+' м², '+l.city;}
+function priceStr(l){return fmt(l.price)+' ₸'+(l.deal==='rent'?' / мес.':'');}
+function ppmStr(l){return fmt(Math.round(l.price/l.area))+' ₸ за м²'+(l.deal==='rent'?' в месяц':'');}
+function floorStr(l){return l.type==='Дом'?l.floors+' эт.':l.floor+'/'+l.floors+' эт.';}
+function paramsStr(l){return l.rooms+'-комн. · '+l.area+' м² · '+floorStr(l);}
+
+/* ---------- иллюстрации фасадов ---------- */
+function rng(seed){
+  return function(){
+    seed|=0;seed=seed+0x6D2B79F5|0;
+    var t=Math.imul(seed^seed>>>15,1|seed);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function art(l){
+  var r=rng(l.id*977+13);
+  var hue=[205,168,34,215,150,190][l.id%6];
+  var wall='hsl('+hue+' 22% 52%)',wall2='hsl('+hue+' 22% 40%)';
+  var s='<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">'+
+    '<rect width="320" height="200" fill="var(--sky)"/><rect y="170" width="320" height="30" fill="var(--line)"/>';
+  if(l.type==='Дом'){
+    s+='<polygon points="70,100 160,52 250,100" fill="'+wall2+'"/><rect x="80" y="100" width="160" height="70" fill="'+wall+'"/>';
+    [100,190].forEach(function(x){
+      s+='<rect x="'+x+'" y="118" width="30" height="26" rx="2" fill="'+(r()>.4?'var(--win)':'var(--win-off)')+'"/>';
+    });
+    s+='<rect x="148" y="126" width="24" height="44" rx="2" fill="'+wall2+'"/>';
+  }else{
+    var rows=Math.max(3,Math.min(l.floors,10)),cols=l.floors>9?5:4;
+    var bw=cols*30+16,bh=rows*14+14,x0=(320-bw)/2,y0=170-bh;
+    var sh=Math.round(bh*.6);
+    s+='<rect x="18" y="'+(170-sh)+'" width="62" height="'+sh+'" fill="'+wall2+'"/>';
+    s+='<rect x="'+(320-80)+'" y="'+(170-Math.round(bh*.45))+'" width="62" height="'+Math.round(bh*.45)+'" fill="'+wall2+'"/>';
+    s+='<rect x="'+x0+'" y="'+y0+'" width="'+bw+'" height="'+bh+'" fill="'+wall+'"/>';
+    for(var rr=0;rr<rows;rr++){for(var c=0;c<cols;c++){
+      s+='<rect x="'+(x0+10+c*30)+'" y="'+(y0+8+rr*14)+'" width="18" height="8" rx="1" fill="'+(r()>.45?'var(--win)':'var(--win-off)')+'"/>';
+    }}
+    s+='<rect x="152" y="158" width="16" height="12" fill="'+wall2+'"/>';
+  }
+  return s+'</svg>';
+}
+var HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.2 2.8 4.5 6.3 4.5c2.1 0 3.9 1.2 5.7 3.3 1.8-2.1 3.6-3.3 5.7-3.3 3.5 0 5.4 3.7 3.9 7.2C19.500 16.400 12 21 12 21z"/></svg>';
+
+/* ---------- пользователи ---------- */
+var afterAuth=null,modalState=null,lastFocus=null,fails=0,lockUntil=0,toastTimer=0,delTimer=0;
+
+function users(){return store.get('kv.users',[]);}
+function saveUsers(u){store.set('kv.users',u);}
+function me(){
+  var email=store.get('kv.session',null);
+  if(!email)return null;
+  var u=users();
+  for(var i=0;i<u.length;i++){if(u[i].email===email)return u[i];}
+  return null;
+}
+function saveMe(user){
+  var u=users();
+  for(var i=0;i<u.length;i++){if(u[i].email===user.email){u[i]=user;}}
+  saveUsers(u);
+}
+function toHex(bytes){return Array.prototype.map.call(bytes,function(b){return ('0'+b.toString(16)).slice(-2);}).join('');}
+function fromHex(h){var a=new Uint8Array(h.length/2);for(var i=0;i<a.length;i++){a[i]=parseInt(h.substr(i*2,2),16);}return a;}
+function hashPw(pw,saltHex){
+  if(!window.crypto||!crypto.subtle)return Promise.reject(new Error('nocrypto'));
+  var key;
+  return crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']).then(function(k){
+    key=k;
+    return crypto.subtle.deriveBits({name:'PBKDF2',salt:fromHex(saltHex),iterations:120000,hash:'SHA-256'},key,256);
+  }).then(function(bits){return toHex(new Uint8Array(bits));});
+}
+
+/* ---------- шапка ---------- */
+function renderHeader(){
+  var u=me(),el=$('#auth-area');
+  if(!u){
+    el.innerHTML='<button class="btn" type="button" data-act="auth" data-tab="login">Войти</button>'+
+      '<button class="btn primary" type="button" data-act="auth" data-tab="register">Регистрация</button>';
+  }else{
+    el.innerHTML='<button class="btn" type="button" data-act="cabinet">Избранное<span class="badge">'+u.favs.length+'</span></button>'+
+      '<button class="btn" type="button" data-act="cabinet">'+esc(u.name)+'</button>';
+  }
+}
+
+/* ---------- каталог ---------- */
+function filters(){
+  var deal=$('input[name="deal"]:checked').value;
+  var price=parseInt(($('#f-price').value||'').replace(/\D/g,''),10)||0;
+  return {deal:deal,city:$('#f-city').value,rooms:$('#f-rooms').value,price:price,sort:$('#f-sort').value};
+}
+function renderGrid(){
+  var f=filters();
+  var list=LISTINGS.filter(function(l){
+    if(l.deal!==f.deal)return false;
+    if(f.city&&l.city!==f.city)return false;
+    if(f.rooms){var n=parseInt(f.rooms,10);if(n===4?l.rooms<4:l.rooms!==n)return false;}
+    if(f.price&&l.price>f.price)return false;
+    return true;
+  });
+  var cmp={
+    'price-asc':function(a,b){return a.price-b.price;},
+    'price-desc':function(a,b){return b.price-a.price;},
+    'area-desc':function(a,b){return b.area-a.area;},
+    'ppm-asc':function(a,b){return a.price/a.area-b.price/b.area;}
+  }[f.sort];
+  if(cmp)list.sort(cmp);
+  var n=list.length,w=(n%10===1&&n%100!==11)?'объект':((n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?'объекта':'объектов');
+  $('#count').textContent=n?('Найдено: '+n+' '+w):'';
+  var u=me(),favs=u?u.favs:[];
+  if(!n){
+    $('#grid').innerHTML='<div class="empty"><p>По этим условиям объектов нет. Увеличьте цену или выберите другой город.</p><button class="btn" type="button" data-act="reset">Сбросить фильтры</button></div>';
+    return;
+  }
+  $('#grid').innerHTML=list.map(function(l){
+    var fav=favs.indexOf(l.id)>-1;
+    return '<article class="card">'+
+      '<button class="card-open" type="button" data-act="open" data-id="'+l.id+'" aria-label="Открыть: '+esc(titleOf(l))+'">'+
+        '<div class="art">'+art(l)+'<span class="tag">'+esc(l.type)+'</span></div>'+
+        '<div class="card-body"><p class="price">'+priceStr(l)+'</p><p class="ppm">'+ppmStr(l)+'</p>'+
+        '<p class="params">'+paramsStr(l)+'</p><p class="where">'+esc(l.city)+', '+esc(l.district)+'</p></div>'+
+      '</button>'+
+      '<button class="heart'+(fav?' on':'')+'" type="button" data-act="fav" data-id="'+l.id+'" aria-pressed="'+fav+'" aria-label="'+(fav?'Убрать из избранного':'Добавить в избранное')+'">'+HEART+'</button>'+
+    '</article>';
+  }).join('');
+}
+
+/* ---------- модальное окно ---------- */
+function openModal(html,wide,state){
+  var ov=$('#overlay'),m=$('#modal');
+  if(ov.hidden)lastFocus=document.activeElement;
+  $('#modal-body').innerHTML=html;
+  m.className='modal'+(wide?' wide':'');
+  ov.hidden=false;
+  modalState=state||null;
+  document.body.style.overflow='hidden';
+  var first=$('input:not([type=checkbox]),button[data-focus]',m);
+  (first||m).focus();
+}
+function closeModal(){
+  $('#overlay').hidden=true;
+  $('#modal-body').innerHTML='';
+  modalState=null;afterAuth=null;
+  document.body.style.overflow='';
+  if(lastFocus&&lastFocus.focus){try{lastFocus.focus();}catch(e){}}
+}
+function toast(msg){
+  var t=$('#toast');
+  t.textContent=msg;t.hidden=false;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.hidden=true;},3200);
+}
+function refreshModal(){
+  if(!modalState)return;
+  if(modalState.type==='listing')showListing(modalState.id,true);
+  else if(modalState.type==='cabinet')showCabinet(true);
+}
+
+/* ---------- авторизация ---------- */
+function fieldHTML(id,label,type,extra){
+  return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" name="'+id+'" type="'+type+'" '+(extra||'')+'><p class="err" id="'+id+'-err" role="alert"></p></div>';
+}
+function showAuth(tab,note){
+  var login=tab==='login';
+  var form=login?
+    '<form class="form" id="form-login" novalidate>'+
+      fieldHTML('log-email','Эл. почта','email','autocomplete="email" required')+
+      fieldHTML('log-pw','Пароль','password','autocomplete="current-password" required')+
+      '<label class="check"><input type="checkbox" data-act="showpw"> Показать пароль</label>'+
+      '<p class="formerr" id="log-form-err" role="alert"></p>'+
+      '<button class="btn primary" type="submit" id="log-submit">Войти</button>'+
+    '</form>':
+    '<form class="form" id="form-reg" novalidate>'+
+      fieldHTML('reg-name','Имя','text','autocomplete="name" required maxlength="60"')+
+      fieldHTML('reg-email','Эл. почта','email','autocomplete="email" required')+
+      fieldHTML('reg-pw','Пароль (от 8 символов, буквы и цифры)','password','autocomplete="new-password" required')+
+      fieldHTML('reg-pw2','Повторите пароль','password','autocomplete="new-password" required')+
+      '<label class="check"><input type="checkbox" data-act="showpw"> Показать пароль</label>'+
+      '<label class="check"><input type="checkbox" id="reg-agree"><span>Согласен на хранение данных аккаунта в этом браузере</span></label>'+
+      '<p class="err" id="reg-agree-err" role="alert"></p>'+
+      '<p class="formerr" id="reg-form-err" role="alert"></p>'+
+      '<button class="btn primary" type="submit" id="reg-submit">Создать аккаунт</button>'+
+    '</form>';
+  openModal('<h2 id="modal-title">'+(login?'Вход':'Регистрация')+'</h2>'+
+    (note?'<p class="note">'+esc(note)+'</p>':'')+
+    '<div class="tabs" role="tablist">'+
+      '<button type="button" role="tab" aria-selected="'+login+'" data-act="auth" data-tab="login">Вход</button>'+
+      '<button type="button" role="tab" aria-selected="'+!login+'" data-act="auth" data-tab="register">Регистрация</button>'+
+    '</div>'+form,false,{type:'auth',tab:tab,note:note});
+}
+function setErr(id,msg){
+  var e=$('#'+id+'-err'),i=$('#'+id);
+  if(e)e.textContent=msg||'';
+  if(i&&i.type!=='checkbox'){if(msg)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid');}
+}
+function finishAuth(user,msg){
+  store.set('kv.session',user.email);
+  var cb=afterAuth;afterAuth=null;
+  closeModal();
+  renderHeader();renderGrid();
+  toast(msg);
+  if(cb)cb();
+}
+function onRegister(){
+  var name=$('#reg-name').value.trim(),email=$('#reg-email').value.trim().toLowerCase();
+  var pw=$('#reg-pw').value,pw2=$('#reg-pw2').value,agree=$('#reg-agree').checked,ok=true;
+  setErr('reg-name','');setErr('reg-email','');setErr('reg-pw','');setErr('reg-pw2','');setErr('reg-agree','');$('#reg-form-err').textContent='';
+  if(name.length<2){setErr('reg-name','Введите имя, минимум 2 символа.');ok=false;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){setErr('reg-email','Введите адрес почты полностью, например name@mail.kz.');ok=false;}
+  if(pw.length<8||!/[A-Za-zА-Яа-яЁё]/.test(pw)||!/\d/.test(pw)){setErr('reg-pw','Пароль: минимум 8 символов, хотя бы одна буква и одна цифра.');ok=false;}
+  if(pw2!==pw){setErr('reg-pw2','Пароли не совпадают.');ok=false;}
+  if(!agree){setErr('reg-agree','Отметьте согласие, чтобы создать аккаунт.');ok=false;}
+  if(!ok)return;
+  var list=users();
+  for(var i=0;i<list.length;i++){if(list[i].email===email){setErr('reg-email','Аккаунт с такой почтой уже есть. Войдите или используйте другой адрес.');return;}}
+  var btn=$('#reg-submit');btn.disabled=true;btn.textContent='Создаём…';
+  var salt=toHex(crypto.getRandomValues(new Uint8Array(16)));
+  hashPw(pw,salt).then(function(hash){
+    var user={name:name,email:email,salt:salt,hash:hash,created:Date.now(),favs:[],requests:[]};
+    var l2=users();l2.push(user);saveUsers(l2);
+    finishAuth(user,'Добро пожаловать, '+name+'!');
+  }).catch(function(){
+    btn.disabled=false;btn.textContent='Создать аккаунт';
+    $('#reg-form-err').textContent='Этот браузер не позволяет безопасно сохранить пароль. Откройте страницу в современном браузере.';
+  });
+}
+function onLogin(){
+  var email=$('#log-email').value.trim().toLowerCase(),pw=$('#log-pw').value;
+  setErr('log-email','');setErr('log-pw','');$('#log-form-err').textContent='';
+  if(!email){setErr('log-email','Введите адрес почты.');return;}
+  if(!pw){setErr('log-pw','Введите пароль.');return;}
+  var wait=Math.ceil((lockUntil-Date.now())/1000);
+  if(wait>0){$('#log-form-err').textContent='Слишком много неудачных попыток. Подождите '+wait+' с и повторите.';return;}
+  var user=null,list=users();
+  for(var i=0;i<list.length;i++){if(list[i].email===email)user=list[i];}
+  var btn=$('#log-submit');btn.disabled=true;
+  function bad(){
+    fails++;
+    if(fails>=5){lockUntil=Date.now()+30000;fails=0;}
+    btn.disabled=false;
+    $('#log-form-err').textContent='Неверная почта или пароль.';
+  }
+  if(!user){hashPw(pw,'00000000000000000000000000000000').then(bad,bad);return;}
+  hashPw(pw,user.salt).then(function(h){
+    if(h!==user.hash){bad();return;}
+    fails=0;
+    finishAuth(user,'С возвращением, '+user.name+'!');
+  }).catch(function(){
+    btn.disabled=false;
+    $('#log-form-err').textContent='Этот браузер не позволяет проверить пароль. Откройте страницу в современном браузере.';
+  });
+}
+function logout(){
+  store.set('kv.session',null);
+  closeModal();renderHeader();renderGrid();
+  toast('Вы вышли из аккаунта');
+}
+
+/* ---------- избранное и заявки ---------- */
+function requireAuth(note,cb){
+  afterAuth=cb;
+  showAuth('login',note);
+}
+function toggleFav(id){
+  var u=me();
+  if(!u){requireAuth('Войдите или зарегистрируйтесь, чтобы сохранять объекты в избранное.',function(){toggleFav(id);});return;}
+  var i=u.favs.indexOf(id);
+  if(i>-1){u.favs.splice(i,1);toast('Убрано из избранного');}
+  else{u.favs.push(id);toast('Добавлено в избранное');}
+  saveMe(u);
+  renderHeader();renderGrid();refreshModal();
+}
+function mortgage(l){
+  var P=l.price*0.8,r=0.18/12,n=240;
+  return Math.round(P*r/(1-Math.pow(1+r,-n)));
+}
+function dateLabel(iso){
+  var d=new Date(iso+'T00:00:00');
+  return isNaN(d)?iso:d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+}
+function todayISO(){
+  var d=new Date();
+  return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
+
+function showListing(id,keep){
+  var l=byId(id);if(!l)return;
+  var u=me(),fav=u&&u.favs.indexOf(id)>-1,req=null;
+  if(u){u.requests.forEach(function(q){if(q.lid===id)req=q;});}
+  var contact;
+  if(!u){
+    contact='<div class="box"><p>Телефон владельца и запись на просмотр доступны после входа.</p>'+
+      '<div class="row"><button class="btn primary" type="button" data-act="login-listing" data-id="'+id+'">Войти или зарегистрироваться</button></div></div>';
+  }else{
+    contact='<div class="box"><p class="fine">Телефон владельца</p><p class="phone">'+esc(l.phone)+'</p>'+
+      '<div class="row"><button class="btn small" type="button" data-act="copy" data-text="'+esc(l.phone)+'">Скопировать номер</button></div></div>'+
+      '<div class="box"><p class="fine">Запись на просмотр</p>'+
+      (req?'<p>Заявка оформлена на <strong>'+esc(dateLabel(req.date))+'</strong>.</p><div class="row"><button class="btn small" type="button" data-act="cancel-req" data-id="'+id+'">Отменить заявку</button></div>':
+      '<form class="row" id="form-req" data-id="'+id+'"><div class="field"><label for="req-date">Дата</label><input id="req-date" type="date" min="'+todayISO()+'"></div>'+
+      '<button class="btn primary" type="submit">Записаться</button></form><p class="err" id="req-date-err" role="alert"></p>')+
+      '</div>';
+  }
+  var rows=[['Город',l.city],['Район',l.district],[l.type==='Дом'?'Посёлок':'Дом / комплекс',l.complex],['Тип',l.type],['Год постройки',l.year],['Площадь',l.area+' м²'],[l.type==='Дом'?'Этажность':'Этаж',floorStr(l).replace(' эт.','')+(l.type==='Дом'?' эт.':'')]];
+  var dl=rows.map(function(r){return '<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>';}).join('');
+  var html='<h2 id="modal-title">'+esc(titleOf(l))+'</h2>'+
+    '<div class="detail-art"><div class="art">'+art(l)+'<span class="tag">'+esc(l.type)+'</span></div></div>'+
+    '<p class="dprice">'+priceStr(l)+'</p><p class="ppm">'+ppmStr(l)+'</p>'+
+    (l.deal==='sale'?'<p class="fine" style="margin-top:6px">Ориентир по ипотеке: около '+fmt(mortgage(l))+' ₸ в месяц при взносе 20%, ставке 18% и сроке 20 лет. Условия банка могут отличаться.</p>':'')+
+    '<dl>'+dl+'</dl><p class="note">'+esc(l.desc)+'</p>'+contact+
+    '<div class="row" style="margin-top:16px"><button class="btn" type="button" data-act="fav" data-id="'+id+'" aria-pressed="'+!!fav+'">'+(fav?'Убрать из избранного':'В избранное')+'</button></div>';
+  if(keep){
+    var sc=$('#overlay').scrollTop;
+    $('#modal-body').innerHTML=html;modalState={type:'listing',id:id};
+    $('#overlay').scrollTop=sc;
+  }else{
+    openModal(html,true,{type:'listing',id:id});
+  }
+}
+function showCabinet(keep){
+  var u=me();
+  if(!u){showAuth('login');return;}
+  var fav=u.favs.map(byId).filter(Boolean).map(function(l){
+    return '<li><button class="lnk" type="button" data-act="open" data-id="'+l.id+'">'+esc(titleOf(l))+'</button><span class="meta">'+priceStr(l)+'</span>'+
+      '<button class="btn small" type="button" data-act="unfav" data-id="'+l.id+'" aria-label="Убрать из избранного: '+esc(titleOf(l))+'">Убрать</button></li>';
+  }).join('');
+  var req=u.requests.map(function(q){
+    var l=byId(q.lid);if(!l)return '';
+    return '<li><button class="lnk" type="button" data-act="open" data-id="'+l.id+'">'+esc(titleOf(l))+'</button><span class="meta">'+esc(dateLabel(q.date))+'</span>'+
+      '<button class="btn small" type="button" data-act="cancel-req" data-id="'+l.id+'">Отменить</button></li>';
+  }).join('');
+  var html='<h2 id="modal-title">Личный кабинет</h2>'+
+    '<p class="note">'+esc(u.name)+' · '+esc(u.email)+'<br>Аккаунт создан '+esc(new Date(u.created).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}))+'</p>'+
+    '<h3>Избранное</h3>'+(fav?'<ul class="list">'+fav+'</ul>':'<p class="note">Пока пусто. Нажмите на сердечко у объекта, чтобы сохранить его.</p>')+
+    '<h3>Заявки на просмотр</h3>'+(req?'<ul class="list">'+req+'</ul>':'<p class="note">Заявок нет. Запись на просмотр открывается в карточке объекта.</p>')+
+    '<div class="row" style="margin-top:24px"><button class="btn" type="button" data-act="logout" data-focus>Выйти</button>'+
+    '<button class="btn danger" type="button" data-act="delete-acc">Удалить аккаунт</button></div>';
+  if(keep){var sc=$('#overlay').scrollTop;$('#modal-body').innerHTML=html;modalState={type:'cabinet'};$('#overlay').scrollTop=sc;}
+  else openModal(html,false,{type:'cabinet'});
+}
+
+/* ---------- события ---------- */
+document.addEventListener('click',function(e){
+  if(e.target.id==='overlay'){closeModal();return;}
+  var b=e.target.closest('[data-act]');
+  if(!b||b.tagName==='INPUT')return;
+  var act=b.getAttribute('data-act'),id=parseInt(b.getAttribute('data-id'),10);
+  if(act==='close')closeModal();
+  else if(act==='auth')showAuth(b.getAttribute('data-tab'),modalState&&modalState.type==='auth'?modalState.note:'');
+  else if(act==='cabinet')showCabinet();
+  else if(act==='open')showListing(id);
+  else if(act==='fav')toggleFav(id);
+  else if(act==='unfav'){toggleFav(id);}
+  else if(act==='login-listing')requireAuth('Войдите, чтобы увидеть телефон и записаться на просмотр.',function(){showListing(id);});
+  else if(act==='logout')logout();
+  else if(act==='reset'){
+    $('#f-city').value='';$('#f-rooms').value='';$('#f-price').value='';$('#f-sort').value='def';renderGrid();
+  }
+  else if(act==='copy'){
+    var txt=b.getAttribute('data-text');
+    var done=function(){toast('Номер скопирован');};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){toast('Выделите номер и скопируйте вручную');});}
+    else toast('Выделите номер и скопируйте вручную');
+  }
+  else if(act==='cancel-req'){
+    var u=me();if(!u)return;
+    u.requests=u.requests.filter(function(q){return q.lid!==id;});
+    saveMe(u);toast('Заявка отменена');refreshModal();
+  }
+  else if(act==='delete-acc'){
+    if(b.getAttribute('data-sure')!=='1'){
+      b.setAttribute('data-sure','1');b.textContent='Нажмите ещё раз, чтобы удалить';
+      clearTimeout(delTimer);
+      delTimer=setTimeout(function(){b.removeAttribute('data-sure');b.textContent='Удалить аккаунт';},5000);
+    }else{
+      var cur=me();
+      saveUsers(users().filter(function(x){return cur&&x.email!==cur.email;}));
+      logout();toast('Аккаунт удалён');
+    }
+  }
+});
+document.addEventListener('submit',function(e){
+  var f=e.target;
+  if(f.id==='form-reg'){e.preventDefault();onRegister();}
+  else if(f.id==='form-login'){e.preventDefault();onLogin();}
+  else if(f.id==='form-req'){
+    e.preventDefault();
+    var u=me(),id=parseInt(f.getAttribute('data-id'),10),d=$('#req-date').value;
+    if(!u)return;
+    if(!d||d<todayISO()){$('#req-date-err').textContent='Выберите дату не раньше сегодняшней.';return;}
+    u.requests=u.requests.filter(function(q){return q.lid!==id;});
+    u.requests.push({lid:id,date:d,ts:Date.now()});
+    saveMe(u);toast('Заявка на просмотр отправлена');refreshModal();
+  }
+});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.getAttribute&&t.getAttribute('data-act')==='showpw'){
+    $$('input[type=password],input[data-pw]',t.closest('form')).forEach(function(i){
+      i.type=t.checked?'text':'password';i.setAttribute('data-pw','1');
+    });
+    if(!t.checked)$$('input[data-pw]',t.closest('form')).forEach(function(i){i.type='password';});
+  }
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&!$('#overlay').hidden){closeModal();return;}
+  if(e.key==='Tab'&&!$('#overlay').hidden){
+    var els=$$('button,input,select,a[href]',$('#modal')).filter(function(x){return !x.disabled&&x.offsetParent!==null;});
+    if(!els.length)return;
+    var first=els[0],last=els[els.length-1];
+    if(e.shiftKey&&(document.activeElement===first||document.activeElement===$('#modal'))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+});
+$('#filters').addEventListener('input',function(e){
+  if(e.target.id==='f-price'){
+    var d=e.target.value.replace(/\D/g,'');
+    e.target.value=d?fmt(parseInt(d,10)):'';
+  }
+  renderGrid();
+});
+$('#filters').addEventListener('change',renderGrid);
+
+/* ---------- старт ---------- */
+(function(){
+  var cities=[],sel=$('#f-city');
+  LISTINGS.forEach(function(l){if(cities.indexOf(l.city)<0)cities.push(l.city);});
+  cities.sort(function(a,b){return a.localeCompare(b,'ru');});
+  sel.innerHTML+=cities.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>';}).join('');
+  renderHeader();renderGrid();
+})();
+})();
+</script>
+
+</body></html>
